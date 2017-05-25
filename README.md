@@ -15,7 +15,7 @@ List configs
 ---
 
 ```bash
-docker-env list
+$ docker-env list
 NAME            HOST                     ENABLED          RUNNING
 development     192.168.99.100:2376      true             true
 testing         192.168.99.101:2376      false            true
