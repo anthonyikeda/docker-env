@@ -30,3 +30,5 @@ $ docker-env use development
 Switching to development...
 DOCKER_HOST=192.168.99.100:2376
 ```
+
+* You'll have to forgive the quality of the code, I'm not a typical Go developer :)
