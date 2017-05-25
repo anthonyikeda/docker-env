@@ -1,0 +1,9 @@
+services:
+  - qa-aws:
+      docker-host: tcp://ec2-34-209-251-67.us-west-2.compute.amazonaws.com:2376
+      tls-verify: true
+      certs-path: ~/.docker/machine/qa-aws/certs
+  - dev-aws:
+      docker-host: tcp://ec2-34-209-251-67.us-west-2.compute.amazonaws.com:2376
+      tls-verify: true
+      certs-path: ~/.docker/machine/qa-aws/certs
