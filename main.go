@@ -23,11 +23,14 @@ func main() {
   listCommand := flag.NewFlagSet("list", flag.ExitOnError)
   saveCommand := flag.NewFlagSet("save", flag.ExitOnError)
   applyCommand := flag.NewFlagSet("apply", flag.ExitOnError)
+  switchCommand := flag.NewFlagSet("switch", flag.ExitOnError)
 
   nameCommandPtr := saveCommand.String("name", "", "Name to save config as")
   hostCommandPtr := saveCommand.String("host", "", "Docker Host and port")
   tlsVerifyCommandPtr := saveCommand.Bool("tls-verify", true, "TLS Verify")
   certsPathCommandPtr := saveCommand.String("cert-path", "", "Path to certs")
+
+  // switchMachineCommandPtr := switchCommand.String("name", "", "Name of config to use")
 
   if len(os.Args) < 2 {
     flag.PrintDefaults()
@@ -46,6 +49,9 @@ func main() {
     fmt.Printf("Config name %s\r\n", *nameCommandPtr)
   case "apply":
     applyCommand.Parse(os.Args[2:])
+  case "switch":
+    switchCommand.Parse(os.Args[2:])
+    fmt.Printf("Switching to machine \"%s\"\r\n", os.Args[2])
   default:
     flag.PrintDefaults()
     os.Exit(1)
