@@ -21,3 +21,12 @@ development     192.168.99.100:2376      true             true
 testing         192.168.99.101:2376      false            true
 production      docker.ecs.aws.com:2376  true             true
 ```
+
+Switching machines
+---
+
+```bash
+$ docker-env use development
+Switching to development...
+DOCKER_HOST=192.168.99.100:2376
+```
