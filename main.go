@@ -30,19 +30,18 @@ func main() {
   tlsVerifyCommandPtr := saveCommand.Bool("tls-verify", true, "TLS Verify")
   certsPathCommandPtr := saveCommand.String("cert-path", "", "Path to certs")
 
-  // switchMachineCommandPtr := switchCommand.String("name", "", "Name of config to use")
+
 
   if len(os.Args) < 2 {
     flag.PrintDefaults()
     os.Exit(1)
   }
-//  fmt.Printf("docker-env --help %s, %s, %t\r\n", *machineName, *hostPtr, *tlsVerifyPtr)
-//  fmt.Printf("Command supplied: %s\r\n", command)
 
   switch os.Args[1] {
   case "list":
     fmt.Println("Listing saved configs...")
     listCommand.Parse(os.Args[2:])
+    loadConfig(CONFIG_PATH)
   case "save":
     fmt.Printf("Saving config to %s\r\n", CONFIG_PATH)
     saveCommand.Parse(os.Args[2:])
@@ -94,4 +93,24 @@ func saveConfig(c Services, filename string) error {
     return err
   }
   return ioutil.WriteFile(filename, bytes, 0644)
+}
+
+func loadConfig(filename string) error {
+  services := Services{}
+  bytes, err := ioutil.ReadFile(filename)
+
+  if err != nil  {
+    return err
+  }
+
+  error := yaml.Unmarshal(bytes, &services)
+
+  if error != nil {
+    return error
+  }
+
+  for _, v := range services.Services {
+    fmt.Printf("%s | %s", v.Name, v.Host)
+  }
+  return nil
 }
