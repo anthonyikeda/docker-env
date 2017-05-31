@@ -1,3 +1,5 @@
+[ ![Codeship Status for anthonyikeda/docker-env](https://app.codeship.com/projects/71874790-2852-0135-51bc-3e07a28a8e4e/status?branch=master)](https://app.codeship.com/projects/223289)
+
 # docker-env
 Manage different docker environments from the command line
 
