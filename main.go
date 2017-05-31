@@ -41,7 +41,6 @@ func main() {
   case "list":
     fmt.Println("Listing saved configs...")
     listCommand.Parse(os.Args[2:])
-    loadConfig(CONFIG_PATH)
   case "save":
     fmt.Printf("Saving config to %s\r\n", CONFIG_PATH)
     saveCommand.Parse(os.Args[2:])
@@ -72,19 +71,41 @@ func main() {
       os.Exit(1)
     }
 
-    services := Services {
+    services, loadErr := loadConfig(CONFIG_PATH)
+
+    if loadErr != nil {
+      fmt.Println(loadErr)
+      services = Services {
         Services: []DockerConf {
           DockerConf {*nameCommandPtr, *hostCommandPtr, *tlsVerifyCommandPtr, *certsPathCommandPtr},
         },
       }
+    } else {
+      services.Services = append(services.Services, DockerConf {*nameCommandPtr, *hostCommandPtr, *tlsVerifyCommandPtr, *certsPathCommandPtr})
+    }
 
     err := saveConfig(services, CONFIG_PATH)
+
     if err != nil {
       fmt.Println(err)
       os.Exit(1)
     }
   }
 
+  if listCommand.Parsed() {
+    services, loadErr := loadConfig(CONFIG_PATH)
+
+    if loadErr != nil {
+      fmt.Println(loadErr)
+      os.Exit(1)
+    }
+
+    fmt.Printf("%s | %s | \r\n", "Name", "Host")
+    for _, v := range services.Services {
+      fmt.Printf("%s | %s | \r\n", v.Name, v.Host)
+    }
+
+  }
 }
 
 func saveConfig(c Services, filename string) error {
@@ -95,22 +116,21 @@ func saveConfig(c Services, filename string) error {
   return ioutil.WriteFile(filename, bytes, 0644)
 }
 
-func loadConfig(filename string) error {
+func loadConfig(filename string) (Services, error) {
+  var s Services
+
   services := Services{}
   bytes, err := ioutil.ReadFile(filename)
 
   if err != nil  {
-    return err
+    return s, err
   }
 
   error := yaml.Unmarshal(bytes, &services)
 
   if error != nil {
-    return error
+    return s, error
   }
 
-  for _, v := range services.Services {
-    fmt.Printf("%s | %s", v.Name, v.Host)
-  }
-  return nil
+  return services, nil
 }
