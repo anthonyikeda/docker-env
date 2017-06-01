@@ -6,6 +6,7 @@ import (
   "os"
   "gopkg.in/yaml.v2"
   "io/ioutil"
+  "errors"
 )
 
 type Services struct {
@@ -29,8 +30,6 @@ func main() {
   hostCommandPtr := saveCommand.String("host", "", "Docker Host and port")
   tlsVerifyCommandPtr := saveCommand.Bool("tls-verify", true, "TLS Verify")
   certsPathCommandPtr := saveCommand.String("cert-path", "", "Path to certs")
-
-
 
   if len(os.Args) < 2 {
     flag.PrintDefaults()
@@ -71,7 +70,7 @@ func main() {
       os.Exit(1)
     }
 
-    services, loadErr := loadConfig(CONFIG_PATH)
+    services, loadErr := LoadConfig(CONFIG_PATH)
 
     if loadErr != nil {
       fmt.Println(loadErr)
@@ -84,7 +83,7 @@ func main() {
       services.Services = append(services.Services, DockerConf {*nameCommandPtr, *hostCommandPtr, *tlsVerifyCommandPtr, *certsPathCommandPtr})
     }
 
-    err := saveConfig(services, CONFIG_PATH)
+    err := SaveConfig(services, CONFIG_PATH)
 
     if err != nil {
       fmt.Println(err)
@@ -93,22 +92,36 @@ func main() {
   }
 
   if listCommand.Parsed() {
-    services, loadErr := loadConfig(CONFIG_PATH)
+    services, loadErr := LoadConfig(CONFIG_PATH)
 
     if loadErr != nil {
       fmt.Println(loadErr)
       os.Exit(1)
     }
 
-    fmt.Printf("%s | %s | \r\n", "Name", "Host")
-    for _, v := range services.Services {
-      fmt.Printf("%s | %s | \r\n", v.Name, v.Host)
+    err := ListConfig(services);
+    if err != nil {
+      fmt.Println(err)
+      os.Exit(1)
     }
-
   }
 }
 
-func saveConfig(c Services, filename string) error {
+func ListConfig(services Services) error {
+
+  if services.Services == nil {
+    return errors.New("Services is not initialised")
+  }
+
+  fmt.Printf("%s | %s | \r\n", "Name", "Host")
+  for _, v := range services.Services {
+    fmt.Printf("%s | %s | \r\n", v.Name, v.Host)
+  }
+
+  return nil
+}
+
+func SaveConfig(c Services, filename string) error {
   bytes, err := yaml.Marshal(c)
   if err != nil {
     return err
@@ -116,7 +129,7 @@ func saveConfig(c Services, filename string) error {
   return ioutil.WriteFile(filename, bytes, 0644)
 }
 
-func loadConfig(filename string) (Services, error) {
+func LoadConfig(filename string) (Services, error) {
   var s Services
 
   services := Services{}
