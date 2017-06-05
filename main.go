@@ -7,6 +7,8 @@ import (
   "gopkg.in/yaml.v2"
   "io/ioutil"
   "errors"
+  "strconv"
+  "syscall"
 )
 
 type Services struct {
@@ -31,7 +33,10 @@ func main() {
   tlsVerifyCommandPtr := saveCommand.Bool("tls-verify", true, "TLS Verify")
   certsPathCommandPtr := saveCommand.String("cert-path", "", "Path to certs")
 
+  applyNamePtr := applyCommand.String("name", "", "Name of config to apply")
+
   if len(os.Args) < 2 {
+    flag.Parse()
     flag.PrintDefaults()
     os.Exit(1)
   }
@@ -54,6 +59,31 @@ func main() {
     os.Exit(1)
   }
 
+  if applyCommand.Parsed() {
+    if *applyNamePtr == "" {
+      applyCommand.PrintDefaults()
+      os.Exit(1)
+    }
+
+    services, loadError := LoadConfig(CONFIG_PATH)
+
+    if loadError != nil {
+      fmt.Println(loadError)
+      fmt.Printf("No services are saved at the default location: %s\r\n", CONFIG_PATH)
+      os.Exit(1)
+    } else {
+      var serviceToApply DockerConf
+      for _, v := range services.Services {
+        if v.Name == *applyNamePtr {
+          serviceToApply = v
+          break
+        }
+      }
+
+      ApplyService(serviceToApply)
+    }
+  }
+
   if saveCommand.Parsed() {
     if *nameCommandPtr == "" {
       saveCommand.PrintDefaults()
@@ -73,7 +103,7 @@ func main() {
     services, loadErr := LoadConfig(CONFIG_PATH)
 
     if loadErr != nil {
-      fmt.Println(loadErr)
+      // fmt.Println(loadErr)
       services = Services {
         Services: []DockerConf {
           DockerConf {*nameCommandPtr, *hostCommandPtr, *tlsVerifyCommandPtr, *certsPathCommandPtr},
@@ -107,17 +137,42 @@ func main() {
   }
 }
 
+func ApplyService(service DockerConf) {
+  fmt.Printf("Applying service %s\r\n", service.Name)
+  os.Setenv("TEST_DOCKER_MACHINE_NAME", service.Name)
+  os.Setenv("TEST_DOCKER_HOST", service.Host)
+  os.Setenv("TEST_DOCKER_CERT_PATH", service.CertPath)
+  os.Setenv("TEST_DOCKER_TLS_VERIFY", strconv.FormatBool(service.TlsVerify))
+  syscall.Exec(os.Getenv("SHELL"), []string{os.Getenv("SHELL")}, syscall.Environ())
+}
+
 func ListConfig(services Services) error {
 
   if services.Services == nil {
     return errors.New("Services is not initialised")
   }
 
-  fmt.Printf("%s | %s | \r\n", "Name", "Host")
+  var maxNameLength int = 0
+  var maxHostLength int = 0
+
   for _, v := range services.Services {
-    fmt.Printf("%s | %s | \r\n", v.Name, v.Host)
+    if len(v.Name) > maxNameLength {
+      maxNameLength = len(v.Name)
+    }
+
+    if len(v.Host) > maxHostLength {
+      maxHostLength = len(v.Host)
+    }
   }
 
+  parm1 := "| %-" + strconv.Itoa(maxNameLength) + "s"
+  parm2 := "| %-" + strconv.Itoa(maxHostLength) + "s"
+
+  outputFormat := fmt.Sprintf("%s %s |\r\n", parm1, parm2)
+  fmt.Printf(outputFormat, "Name", "Host")
+  for _, v := range services.Services {
+    fmt.Printf(outputFormat, v.Name, v.Host)
+  }
   return nil
 }
 
