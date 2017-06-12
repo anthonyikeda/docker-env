@@ -28,9 +28,9 @@ Switching machines
 ---
 
 ```bash
-$ docker-env use development
-Switching to development...
+$ eval $(docker-env apply development)
 DOCKER_HOST=192.168.99.100:2376
+DOCKER_TLS_VERIFY=1
 ```
 
 * You'll have to forgive the quality of the code, I'm not a typical Go developer :)
