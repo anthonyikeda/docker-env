@@ -8,7 +8,6 @@ import (
   "io/ioutil"
   "errors"
   "strconv"
-  "syscall"
 )
 
 type Services struct {
@@ -138,12 +137,11 @@ func main() {
 }
 
 func ApplyService(service DockerConf) {
-  fmt.Printf("Applying service %s\r\n", service.Name)
-  os.Setenv("TEST_DOCKER_MACHINE_NAME", service.Name)
-  os.Setenv("TEST_DOCKER_HOST", service.Host)
-  os.Setenv("TEST_DOCKER_CERT_PATH", service.CertPath)
-  os.Setenv("TEST_DOCKER_TLS_VERIFY", strconv.FormatBool(service.TlsVerify))
-  syscall.Exec(os.Getenv("SHELL"), []string{os.Getenv("SHELL")}, syscall.Environ())
+  fmt.Printf("# Applying service %s\r\n", service.Name)
+  fmt.Printf("export DOCKER_HOST=%s\r\n", service.Host)
+  fmt.Printf("export DOCKER_CERT_PATH=%s\r\n", service.CertPath)
+  fmt.Printf("export DOCKER_TLS_VERIFY=%s\r\n", strconv.FormatBool(service.TlsVerify))
+  fmt.Printf("export DOCKER_MACHINE_NAME=%s\r\n", service.Name)
 }
 
 func ListConfig(services Services) error {
